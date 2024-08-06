@@ -1,0 +1,30 @@
+<!-- HTML код для карточки товара с сердечком -->
+<div class="product-card">
+    <h2>Название товара</h2>
+    <button class="add-to-favorites">Добавить в избранное</button>
+</div>
+
+<!-- JavaScript код для обработки нажатий на сердечко и добавления выбранных товаров на страницу -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var addToFavoritesButtons = document.querySelectorAll('.add-to-favorites');
+    addToFavoritesButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            var productId = this.closest('.product-card').dataset.productId;
+            addToFavorites(productId);
+        });
+    });
+
+    function addToFavorites(productId) {
+        var favoriteProductsContainer = document.querySelector('.favorite-products');
+        var newFavoriteProduct = document.createElement('li');
+        newFavoriteProduct.textContent = 'Товар #' + productId;
+        favoriteProductsContainer.appendChild(newFavoriteProduct);
+    }
+});
+</script>
+
+<!-- Контейнер для вывода выбранных товаров -->
+<ul class="favorite-products">
+    <!-- Здесь будут выводиться выбранные товары -->
+</ul>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="./index.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        .leaflet-container {
+            background: #f3f4f6; /* светло-серый фон */
+        }
+        .leaflet-tile {
+            filter: brightness(1.2) contrast(0.85) saturate(0.6); /* светлый стиль */
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // Инициализация карты с начальным видом на Москву
+        var map = L.map('map').setView([55.751244, 37.618423], 13);
+
+        // Добавление слоя карты от OpenStreetMap с применением фильтра CSS для светлого стиля
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Определение изображений и их границ
+        var imageUrl1 = './assets/icons/truck.png'; // Укажите путь к вашему первому изображению
+        var imageUrl2 = './assets/icons/noun-hard-hat-32851 3.png'; // Укажите путь к вашему второму изображению
+
+        // Массив координат и границ для 5 мест первой картинки
+        var locations1 = [
+            {
+                bounds: [[55.751827, 37.543272], [55.755827, 37.551272]], // Ваганьковское кладбище
+                name: "Ваганьковское кладбище"
+            },
+            {
+                bounds: [[55.756911, 37.614242], [55.760911, 37.622242]], // Театральная
+                name: "Театральная"
+            },
+            {
+                bounds: [[55.740444, 37.602707], [55.744444, 37.610707]], // Государственный музей изобразительных искусств имени А.С. Пушкина
+                name: "Государственный музей изобразительных искусств имени А.С. Пушкина"
+            },
+            {
+                bounds: [[55.740500, 37.649056], [55.744500, 37.657056]], // Курский вокзал
+                name: "Курский вокзал"
+            },
+            {
+                bounds: [[55.755500, 37.746000], [55.759500, 37.754000]], // Шоссе Энтузиастов
+                name: "Шоссе Энтузиастов"
+            }
+        ];
+
+        // Массив координат и границ для 5 мест второй картинки
+        var locations2 = [
+            {
+                bounds: [[55.750244, 37.581921], [55.753244, 37.587921]], // Ул. Новый Арбат
+                name: "Ул. Новый Арбат"
+            },
+            {
+                bounds: [[55.735301, 37.609126], [55.738301, 37.615126]], // Крымская набережная
+                name: "Крымская набережная"
+            },
+            {
+                bounds: [[55.745922, 37.679284], [55.748922, 37.685284]], // Площадь Ильича
+                name: "Площадь Ильича"
+            },
+            {
+                bounds: [[55.751315, 37.714034], [55.754315, 37.720034]], // Авиамоторная ул.
+                name: "Авиамоторная ул."
+            },
+            {
+                bounds: [[55.750382, 37.714644], [55.753382, 37.720644]], // МЦД рядом с Андроновка
+                name: "МЦД рядом с Андроновка"
+            }
+        ];
+
+        // Функция для создания увеличенных границ
+        function getExpandedBounds(bounds, factor) {
+            var latDiff = (bounds[1][0] - bounds[0][0]) * (factor - 1) / 2;
+            var lngDiff = (bounds[1][1] - bounds[0][1]) * (factor - 1) / 2;
+            return [
+                [bounds[0][0] - latDiff, bounds[0][1] - lngDiff],
+                [bounds[1][0] + latDiff, bounds[1][1] + lngDiff]
+            ];
+        }
+
+        // Функция для добавления изображений в заданные места
+        function addImageOverlays() {
+            var sizeMultiplier = window.innerWidth <= 768 ? 3 : 1; // Увеличиваем размер изображений в 3 раза при ширине <= 768px
+            locations1.forEach(location => {
+                var bounds = getExpandedBounds(location.bounds, sizeMultiplier);
+                L.imageOverlay(imageUrl1, bounds).addTo(map);
+            });
+            locations2.forEach(location => {
+                var bounds = getExpandedBounds(location.bounds, sizeMultiplier);
+                L.imageOverlay(imageUrl2, bounds).addTo(map);
+            });
+        }
+
+        // Функция для обновления карты по городу
+        function updateMap(city) {
+            fetch(`https://nominatim.openstreetmap.org/search?city=${city}&format=json&limit=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        var lat = data[0].lat;
+                        var lon = data[0].lon;
+                        map.setView([lat, lon], 13);
+                        L.marker([lat, lon]).addTo(map)
+                            .bindPopup(`${city}`)
+                            .openPopup();
+                        // Добавление изображений после обновления карты
+                        addImageOverlays();
+                    } else {
+                        alert('City not found!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching city data:', error);
+                });
+        }
+
+        // Пример обновления карты для города "Москва"
+        var city = "Москва";
+        updateMap(city);
+
+        // Изначальное добавление изображений на карту
+        addImageOverlays();
+
+        // Обновление размеров изображений при изменении размера окна
+        window.addEventListener('resize', function() {
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.ImageOverlay) {
+                    map.removeLayer(layer);
+                }
+            });
+            addImageOverlays();
+        });
+    </script>
+</body>
+</html>

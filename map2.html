@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="./index.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // Инициализация карты с начальным видом на Москву
+        var map = L.map('map').setView([55.751244, 37.618423], 13);
+
+        // Добавление слоя карты от OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Определение изображений и их границ
+        var imageUrl1 = 'path_to_your_image1.png'; // Укажите путь к вашему первому изображению
+        var imageUrl2 = 'path_to_your_image2.png'; // Укажите путь к вашему второму изображению
+
+        // Массив координат и границ для 5 мест первой картинки
+        var locations1 = [
+            {
+                bounds: [[55.752827, 37.545272], [55.754827, 37.549272]], // Ваганьковское кладбище
+                name: "Ваганьковское кладбище"
+            },
+            {
+                bounds: [[55.757911, 37.616242], [55.759911, 37.620242]], // Театральная
+                name: "Театральная"
+            },
+            {
+                bounds: [[55.741444, 37.604707], [55.743444, 37.608707]], // Государственный музей изобразительных искусств имени А.С. Пушкина
+                name: "Государственный музей изобразительных искусств имени А.С. Пушкина"
+            },
+            {
+                bounds: [[55.741500, 37.651056], [55.743500, 37.655056]], // Курский вокзал
+                name: "Курский вокзал"
+            },
+            {
+                bounds: [[55.756500, 37.748000], [55.758500, 37.752000]], // Шоссе Энтузиастов
+                name: "Шоссе Энтузиастов"
+            }
+        ];
+
+        // Массив координат и границ для 5 мест второй картинки
+        var locations2 = [
+            {
+                bounds: [[55.751244, 37.583921], [55.752244, 37.585921]], // Ул. Новый Арбат
+                name: "Ул. Новый Арбат"
+            },
+            {
+                bounds: [[55.736301, 37.611126], [55.737301, 37.613126]], // Крымская набережная
+                name: "Крымская набережная"
+            },
+            {
+                bounds: [[55.746922, 37.681284], [55.747922, 37.683284]], // Площадь Ильича
+                name: "Площадь Ильича"
+            },
+            {
+                bounds: [[55.752315, 37.716034], [55.753315, 37.718034]], // Авиамоторная ул.
+                name: "Авиамоторная ул."
+            },
+            {
+                bounds: [[55.751382, 37.716644], [55.752382, 37.718644]], // МЦД рядом с Андроновка
+                name: "МЦД рядом с Андроновка"
+            }
+        ];
+
+        // Функция для добавления изображений в заданные места
+        function addImageOverlays() {
+            locations1.forEach(location => {
+                L.imageOverlay(imageUrl1, location.bounds).addTo(map);
+            });
+            locations2.forEach(location => {
+                L.imageOverlay(imageUrl2, location.bounds).addTo(map);
+            });
+        }
+
+        // Функция для обновления карты по городу
+        function updateMap(city) {
+            fetch(`https://nominatim.openstreetmap.org/search?city=${city}&format=json&limit=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        var lat = data[0].lat;
+                        var lon = data[0].lon;
+                        map.setView([lat, lon], 13);
+                        L.marker([lat, lon]).addTo(map)
+                            .bindPopup(`${city}`)
+                            .openPopup();
+                        // Добавление изображений после обновления карты
+                        addImageOverlays();
+                    } else {
+                        alert('City not found!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching city data:', error);
+                });
+        }
+
+        // Пример обновления карты для города "Москва"
+        var city = "Москва";
+        updateMap(city);
+
+        // Изначальное добавление изображений на карту
+        addImageOverlays();
+    </script>
+</body>
+</html>
